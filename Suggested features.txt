@@ -1,0 +1,148 @@
+Here are several suggested features we could add to enhance the SDK:
+
+Caching Layer
+python
+CopyInsert
+class SefariaCache:
+    def __init__(self, ttl: int = 3600):  # 1 hour default TTL
+        self.cache = {}
+        self.ttl = ttl
+This would cache API responses to reduce API calls and improve performance, especially for frequently accessed texts.
+
+Async Support
+python
+CopyInsert
+class AsyncSefariaClient:
+    async def get_text(self, tref: str, **kwargs):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"{self.base_url}/v3/texts/{quote(tref)}", params=kwargs) as response:
+                return await response.json()
+This would allow for non-blocking API calls, useful in web applications or when making multiple requests.
+
+Text Processing Utilities
+python
+CopyInsert
+class TextProcessor:
+    @staticmethod
+    def extract_verses(text_data: Dict) -> List[str]:
+        """Extract individual verses from text response."""
+        
+    @staticmethod
+    def format_hebrew(text: str) -> str:
+        """Format Hebrew text with proper RTL and nikud handling."""
+        
+    @staticmethod
+    def get_parallel_texts(hebrew: str, english: str) -> List[Tuple[str, str]]:
+        """Align Hebrew and English texts verse by verse."""
+Error Handling and Retry Logic
+python
+CopyInsert
+class SefariaRetry:
+    def __init__(self, max_retries: int = 3, backoff_factor: float = 0.5):
+        self.max_retries = max_retries
+        self.backoff_factor = backoff_factor
+This would add robust error handling and automatic retries for failed API calls.
+
+Rate Limiting
+python
+CopyInsert
+class RateLimiter:
+    def __init__(self, calls: int = 100, period: int = 60):
+        self.calls = calls  # calls per period
+        self.period = period  # period in seconds
+To respect API limits and prevent throttling.
+
+Data Export Features
+python
+CopyInsert
+class DataExporter:
+    def to_pdf(self, text_data: Dict, output_path: str):
+        """Export text to PDF with proper formatting."""
+        
+    def to_epub(self, text_data: Dict, output_path: str):
+        """Export text to EPUB format."""
+        
+    def to_csv(self, text_data: Dict, output_path: str):
+        """Export text data to CSV format."""
+Text Analysis Tools
+python
+CopyInsert
+class TextAnalyzer:
+    def find_citations(self, text: str) -> List[str]:
+        """Find biblical/rabbinic citations in text."""
+        
+    def get_word_frequency(self, text: str) -> Dict[str, int]:
+        """Analyze word frequency in text."""
+        
+    def find_similar_passages(self, text: str) -> List[str]:
+        """Find similar passages in the Sefaria library."""
+CLI Interface
+python
+CopyInsert
+def create_cli():
+    """Create a command-line interface for the SDK."""
+    import click
+    
+    @click.command()
+    @click.argument('reference')
+    @click.option('--language', default='en')
+    def get_text(reference, language):
+        client = SefariaClient()
+        print(client.get_text(reference, version=language))
+Streaming Support
+python
+CopyInsert
+class StreamingClient:
+    def stream_text(self, tref: str) -> Generator[str, None, None]:
+        """Stream text content for large texts."""
+        
+    def stream_search_results(self, query: str) -> Generator[Dict, None, None]:
+        """Stream search results for large result sets."""
+Advanced Search Features
+python
+CopyInsert
+class AdvancedSearch:
+    def semantic_search(self, query: str) -> List[Dict]:
+        """Search by meaning rather than exact words."""
+        
+    def fuzzy_search(self, query: str, threshold: float = 0.8) -> List[Dict]:
+        """Search with fuzzy matching for spelling variations."""
+Validation and Schema
+python
+CopyInsert
+from pydantic import BaseModel
+
+class TextReference(BaseModel):
+    book: str
+    chapter: int
+    verse: Optional[int]
+    
+    def to_tref(self) -> str:
+        """Convert to Sefaria text reference format."""
+Integration Helpers
+python
+CopyInsert
+class WebFrameworkIntegration:
+    class Flask:
+        """Flask-specific integration helpers."""
+        
+    class Django:
+        """Django-specific integration helpers."""
+        
+    class FastAPI:
+        """FastAPI-specific integration helpers."""
+Would you like me to implement any of these features? Each one would add significant value to the SDK:
+
+Caching would improve performance
+Async support would make it more suitable for web applications
+Text processing would help with Hebrew/English text handling
+Error handling would make it more robust
+Rate limiting would prevent API abuse
+Export features would add practical utility
+Text analysis would add scholarly research capabilities
+CLI would make it accessible from command line
+Streaming would handle large texts efficiently
+Advanced search would improve text discovery
+Validation would make it more type-safe
+Framework integration would make it easier to use in web apps
+Let me know which features interest you most and I can prioritize implementing them!
