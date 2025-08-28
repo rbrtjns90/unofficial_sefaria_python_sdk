@@ -1,6 +1,7 @@
 """
 Pytest configuration and shared fixtures.
 """
+
 import pytest
 from unittest.mock import Mock
 from sefaria_sdk.client import SefariaClient
@@ -17,12 +18,14 @@ def mock_text_response():
     """Fixture providing a mock text API response."""
     return {
         "ref": "Genesis 1:1",
-        "versions": [{
-            "text": ["In the beginning God created the heaven and the earth."],
-            "language": "en",
-            "versionTitle": "JPS 1917"
-        }],
-        "he": ["בְּרֵאשִׁית בָּרָא אֱלֹהִים אֵת הַשָּׁמַיִם וְאֵת הָאָרֶץ"]
+        "versions": [
+            {
+                "text": ["In the beginning God created the heaven and the earth."],
+                "language": "en",
+                "versionTitle": "JPS 1917",
+            }
+        ],
+        "he": ["בְּרֵאשִׁית בָּרָא אֱלֹהִים אֵת הַשָּׁמַיִם וְאֵת הָאָרֶץ"],
     }
 
 
@@ -34,9 +37,19 @@ def mock_search_response():
             "total": 3,
             "hits": [
                 {"_source": {"ref": "Genesis 1:1", "content": "In the beginning"}},
-                {"_source": {"ref": "Psalms 23:1", "content": "The Lord is my shepherd"}},
-                {"_source": {"ref": "Ecclesiastes 3:1", "content": "To every thing there is a season"}}
-            ]
+                {
+                    "_source": {
+                        "ref": "Psalms 23:1",
+                        "content": "The Lord is my shepherd",
+                    }
+                },
+                {
+                    "_source": {
+                        "ref": "Ecclesiastes 3:1",
+                        "content": "To every thing there is a season",
+                    }
+                },
+            ],
         }
     }
 
@@ -48,7 +61,7 @@ def mock_related_response():
         "links": [
             {"ref": "Rashi on Genesis 1:1", "type": "commentary"},
             {"ref": "Ibn Ezra on Genesis 1:1", "type": "commentary"},
-            {"ref": "Ramban on Genesis 1:1", "type": "commentary"}
+            {"ref": "Ramban on Genesis 1:1", "type": "commentary"},
         ]
     }
 
@@ -59,7 +72,7 @@ def mock_languages_response():
     return {
         "en": ["JPS 1917", "Robert Alter", "Sefaria Community Translation"],
         "he": ["Tanach with Text Only", "Miqra according to the Masorah"],
-        "es": ["Traducción Española"]
+        "es": ["Traducción Española"],
     }
 
 
@@ -69,7 +82,7 @@ def sample_hebrew_text():
     return [
         "בְּרֵאשִׁית בָּרָא אֱלֹהִים אֵת הַשָּׁמַיִם וְאֵת הָאָרֶץ",
         "וְהָאָרֶץ הָיְתָה תֹהוּ וָבֹהוּ וְחֹשֶׁךְ עַל־פְּנֵי תְהוֹם",
-        "וַיֹּאמֶר אֱלֹהִים יְהִי אוֹר וַיְהִי־אוֹר"
+        "וַיֹּאמֶר אֱלֹהִים יְהִי אוֹר וַיְהִי־אוֹר",
     ]
 
 
@@ -79,5 +92,5 @@ def sample_english_text():
     return [
         "In the beginning God created the heaven and the earth.",
         "And the earth was without form, and void; and darkness was upon the face of the deep.",
-        "And God said, Let there be light: and there was light."
+        "And God said, Let there be light: and there was light.",
     ]
