@@ -190,6 +190,10 @@ class SefariaClient:
             payload["field"] = field
         payload.update(kwargs)
         
+        # Map common parameter names
+        if 'limit' in payload:
+            payload['size'] = payload.pop('limit')
+        
         response = self.session.post(endpoint, json=payload, headers=self.headers, timeout=20)
         response.raise_for_status()
         return response.json()
@@ -304,9 +308,20 @@ class SefariaClient:
         if custom:
             params["custom"] = custom
             
-        response = requests.get(endpoint, params=params)
+        response = self.session.get(endpoint, params=params, headers=self.headers, timeout=15)
         response.raise_for_status()
         return response.json()
+    
+    def get_calendar(self, timezone: Optional[str] = None) -> Dict:
+        """Get calendar items (alias for get_calendar_items).
+        
+        Args:
+            timezone: Optional timezone
+            
+        Returns:
+            Dict containing calendar items
+        """
+        return self.get_calendar_items(timezone=timezone)
 
     def get_ref_data(self, refs: List[str]) -> Dict:
         """Get data for multiple text references.

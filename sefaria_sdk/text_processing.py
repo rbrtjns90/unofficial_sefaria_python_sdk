@@ -72,9 +72,8 @@ class TextProcessor:
         if not text.startswith('\u200f'):
             text = '\u200f' + text
             
-        # Normalize nikud (vowel points)
-        # Ensure nikud appears under/above the correct letter
-        text = re.sub(r'([א-ת])([\u0591-\u05C7]+)', r'\2\1', text)
+        # Note: Hebrew text formatting - keeping original text intact
+        # The nikud normalization was causing issues with character order
         
         # Add final formatting
         text = text.strip()
