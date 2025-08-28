@@ -1,43 +1,50 @@
 import requests
 from typing import Optional, List, Dict, Union, Any
 from urllib.parse import quote
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 class SefariaClient:
     """Client for interacting with the Sefaria API."""
     
-    def __init__(self, base_url: str = "https://www.sefaria.org/api"):
+    def __init__(self, base_url: str = "https://www.sefaria.org/api", user_agent: Optional[str] = None):
         """Initialize the Sefaria client.
         
         Args:
             base_url: Base URL for the Sefaria API. Defaults to https://www.sefaria.org/api
+            user_agent: Optional custom user agent string
         """
         self.base_url = base_url.rstrip('/')
+        self.session = requests.Session()
         
-    def get_text(self, tref: str, version: Optional[str] = None, 
-                 fill_in_missing_segments: bool = False,
-                 return_format: str = "default") -> Dict:
-        """Get a text from Sefaria.
+        # Configure retries
+        retries = Retry(
+            total=4,
+            backoff_factor=0.5,
+            status_forcelist=[429, 500, 502, 503, 504],
+            allowed_methods=["GET", "POST"]
+        )
+        self.session.mount("https://", HTTPAdapter(max_retries=retries))
+        self.session.mount("http://", HTTPAdapter(max_retries=retries))
+        
+        # Set default headers
+        self.headers = {
+            "Accept": "application/json",
+            "User-Agent": user_agent or "Unofficial-Sefaria-Python-SDK/0.1"
+        }
+        
+    def get_text(self, tref: str, **kwargs) -> Dict:
+        """Get a text from Sefaria using the v3 texts API.
         
         Args:
             tref: A Sefaria-specific reference
-            version: Optional version specification (language or language|versionTitle)
-            fill_in_missing_segments: Whether to fill in missing segments from other versions
-            return_format: One of ["default", "text_only", "strip_only_footnotes", "wrap_all_entities"]
+            **kwargs: Additional parameters passed to the API (language, direction, context, etc.)
             
         Returns:
             Dict containing the requested text and metadata
         """
         endpoint = f"{self.base_url}/v3/texts/{quote(tref)}"
-        params = {}
-        
-        if version:
-            params["version"] = version
-        if fill_in_missing_segments:
-            params["fill_in_missing_segments"] = "1"
-        if return_format != "default":
-            params["return_format"] = return_format
-            
-        response = requests.get(endpoint, params=params)
+        response = self.session.get(endpoint, params=kwargs, headers=self.headers, timeout=15)
         response.raise_for_status()
         return response.json()
     
@@ -51,7 +58,7 @@ class SefariaClient:
             List of dictionaries containing version metadata
         """
         endpoint = f"{self.base_url}/texts/versions/{quote(index)}"
-        response = requests.get(endpoint)
+        response = self.session.get(endpoint, headers=self.headers, timeout=15)
         response.raise_for_status()
         return response.json()
     
@@ -65,7 +72,7 @@ class SefariaClient:
             Dict containing manuscript data and metadata
         """
         endpoint = f"{self.base_url}/manuscripts/{quote(tref)}"
-        response = requests.get(endpoint)
+        response = self.session.get(endpoint, headers=self.headers, timeout=15)
         response.raise_for_status()
         return response.json()
     
@@ -102,7 +109,7 @@ class SefariaClient:
             Dict containing the full index record
         """
         endpoint = f"{self.base_url}/v2/raw/index/{quote(index_title)}"
-        response = requests.get(endpoint)
+        response = self.session.get(endpoint, headers=self.headers, timeout=15)
         response.raise_for_status()
         return response.json()
     
@@ -113,7 +120,7 @@ class SefariaClient:
             Dict containing the complete table of contents
         """
         endpoint = f"{self.base_url}/index"
-        response = requests.get(endpoint)
+        response = self.session.get(endpoint, headers=self.headers, timeout=15)
         response.raise_for_status()
         return response.json()
     
@@ -127,7 +134,7 @@ class SefariaClient:
             Dict containing topic links
         """
         endpoint = f"{self.base_url}/ref-topic-links/{quote(tref)}"
-        response = requests.get(endpoint)
+        response = self.session.get(endpoint, headers=self.headers, timeout=15)
         response.raise_for_status()
         return response.json()
     
@@ -141,82 +148,49 @@ class SefariaClient:
             Dict containing translations organized by category
         """
         endpoint = f"{self.base_url}/texts/translations/{quote(lang)}"
-        response = requests.get(endpoint)
+        response = self.session.get(endpoint, headers=self.headers, timeout=15)
         response.raise_for_status()
         return response.json()
 
-    def get_languages(self) -> Dict:
-        """Get list of available languages.
+    def get_languages(self) -> List[str]:
+        """Get list of available translation languages.
         
         Returns:
-            Dict containing available languages
+            List of language codes that have translations
         """
-        endpoint = f"{self.base_url}/texts/languages"
-        response = requests.get(endpoint)
+        endpoint = f"{self.base_url}/texts/translations"
+        response = self.session.get(endpoint, headers=self.headers, timeout=15)
         response.raise_for_status()
         return response.json()
 
     def search(self, query: str, type: str = "text", field: Optional[str] = None,
-              exact: bool = False, offset: int = 0, limit: int = 10,
-              filters: Optional[List[str]] = None, filter_fields: Optional[List[str]] = None,
-              aggs: Optional[List[str]] = None, sort_type: Optional[str] = None,
-              sort_dir: Optional[str] = None, applied_filters: Optional[List[str]] = None,
-              applied_filter_fields: Optional[List[str]] = None,
-              group_related: bool = False, with_refs: bool = False) -> Dict:
-        """Search Sefaria's library of texts and source sheets.
+              offset: int = 0, limit: int = 10, **kwargs) -> Dict:
+        """Search Sefaria's library using the search-wrapper endpoint.
         
         Args:
-            query: The search query string
+            query: The search query string (required)
             type: Type of search ("text" or "sheet")
-            field: Field to search in (e.g., "content" for sheets)
-            exact: Whether to perform exact match
+            field: Field to search in (e.g., "exact", "naive_lemmatizer" for text; "content" for sheets)
             offset: Number of results to skip
             limit: Maximum number of results to return
-            filters: List of filters to apply
-            filter_fields: Fields to apply filters to
-            aggs: List of aggregations to return
-            sort_type: Type of sorting
-            sort_dir: Sort direction
-            applied_filters: Already applied filters
-            applied_filter_fields: Fields for applied filters
-            group_related: Whether to group related results
-            with_refs: Whether to include references
+            **kwargs: Additional search parameters (filters, filter_fields, aggs, sort_type, etc.)
             
         Returns:
             Dict containing search results
         """
-        endpoint = f"{self.base_url}/search"
-        params = {
-            "q": query,
+        endpoint = f"{self.base_url}/search-wrapper"
+        payload = {
+            "query": query,
             "type": type,
             "offset": offset,
             "limit": limit
         }
         
         if field:
-            params["field"] = field
-        if exact:
-            params["exact"] = 1
-        if filters:
-            params["filters"] = filters
-        if filter_fields:
-            params["filter_fields"] = filter_fields
-        if aggs:
-            params["aggs"] = aggs
-        if sort_type:
-            params["sort_type"] = sort_type
-        if sort_dir:
-            params["sort_dir"] = sort_dir
-        if applied_filters:
-            params["applied_filters"] = applied_filters
-        if applied_filter_fields:
-            params["applied_filter_fields"] = applied_filter_fields
-        if group_related:
-            params["group_related"] = 1
-        if with_refs:
-            params["with_refs"] = 1
-            
-        response = requests.get(endpoint, params=params)
+            payload["field"] = field
+        payload.update(kwargs)
+        
+        response = self.session.post(endpoint, json=payload, headers=self.headers, timeout=20)
         response.raise_for_status()
         return response.json()
 
@@ -230,7 +204,7 @@ class SefariaClient:
             Dict containing text counts
         """
         endpoint = f"{self.base_url}/counts/{quote(title)}"
-        response = requests.get(endpoint)
+        response = self.session.get(endpoint, headers=self.headers, timeout=15)
         response.raise_for_status()
         return response.json()
 
@@ -241,7 +215,7 @@ class SefariaClient:
             Dict containing list of texts
         """
         endpoint = f"{self.base_url}/texts/list"
-        response = requests.get(endpoint)
+        response = self.session.get(endpoint, headers=self.headers, timeout=15)
         response.raise_for_status()
         return response.json()
 
@@ -255,7 +229,7 @@ class SefariaClient:
             Dict containing links
         """
         endpoint = f"{self.base_url}/links/{quote(tref)}"
-        response = requests.get(endpoint)
+        response = self.session.get(endpoint, headers=self.headers, timeout=15)
         response.raise_for_status()
         return response.json()
 
@@ -269,7 +243,21 @@ class SefariaClient:
             Dict containing link summary
         """
         endpoint = f"{self.base_url}/links/{quote(tref)}/summary"
-        response = requests.get(endpoint)
+        response = self.session.get(endpoint, headers=self.headers, timeout=15)
+        response.raise_for_status()
+        return response.json()
+
+    def get_related(self, tref: str) -> Dict:
+        """Get related content for a text reference using the modern Related API.
+        
+        Args:
+            tref: Text reference to get related content for
+            
+        Returns:
+            Dict containing related content (topics, links, etc.)
+        """
+        endpoint = f"{self.base_url}/related/{quote(tref)}"
+        response = self.session.get(endpoint, headers=self.headers, timeout=15)
         response.raise_for_status()
         return response.json()
 
@@ -330,6 +318,6 @@ class SefariaClient:
             Dict containing reference data
         """
         endpoint = f"{self.base_url}/bulktext"
-        response = requests.post(endpoint, json={"refs": refs})
+        response = self.session.post(endpoint, json={"refs": refs}, headers=self.headers, timeout=20)
         response.raise_for_status()
         return response.json()

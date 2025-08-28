@@ -66,10 +66,24 @@ def search(query, limit):
         
         if 'hits' in results and 'hits' in results['hits']:
             for hit in results['hits']['hits']:
-                table.add_row(
-                    hit.get('ref', 'N/A'),
-                    hit.get('highlight', {}).get('content', ['N/A'])[0]
-                )
+                # Extract reference from _id field
+                ref = hit.get('_id', 'N/A')
+                # Clean up the reference by removing version info in parentheses
+                if '(' in ref:
+                    ref = ref.split('(')[0].strip()
+                
+                # Extract highlighted text from highlight.exact field
+                highlight_text = 'N/A'
+                if 'highlight' in hit and 'exact' in hit['highlight']:
+                    highlight_snippets = hit['highlight']['exact']
+                    if highlight_snippets:
+                        # Take first snippet and clean up HTML tags
+                        highlight_text = highlight_snippets[0].replace('<b>', '').replace('</b>', '')
+                        # Truncate if too long
+                        if len(highlight_text) > 100:
+                            highlight_text = highlight_text[:97] + '...'
+                
+                table.add_row(ref, highlight_text)
         else:
             table.add_row("No results found", "")
             

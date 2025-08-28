@@ -1,172 +1,194 @@
 # Unofficial Sefaria Python SDK
 
-A comprehensive Python SDK for accessing Jewish texts through the Sefaria API. This SDK provides easy-to-use interfaces for retrieving texts, translations, and metadata from Sefaria's extensive collection of Jewish texts.
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Features
+A comprehensive, modernized Python SDK for interacting with the [Sefaria API](https://www.sefaria.org/developers), featuring robust client architecture, extensive examples, and full compatibility with current API endpoints.
 
-- **Text Retrieval**: Get Hebrew and English texts with version control
-- **Calendar Integration**: Access Jewish calendar data and weekly Torah portions
-- **Search Capabilities**: Search across Sefaria's text collection
-- **Metadata Access**: Get information about texts, versions, and languages
-- **Async Support**: Efficient batch processing of multiple texts
-- **Error Handling**: Robust error handling and response validation
-- **Type Hints**: Full Python type hints for better IDE support
+## ✨ Features
 
-## Installation
+### 🚀 Modern API Support
+- **Search**: POST `/search-wrapper` endpoint with advanced query capabilities
+- **Texts**: v3 API with comprehensive parameter support and language options
+- **Related Content**: `/related/{tref}` endpoint for content relationships
+- **Languages**: `/texts/translations` for available translations discovery
+
+### 💪 Robust Client Architecture
+- Connection pooling with `requests.Session()`
+- Exponential backoff retry strategy for reliability
+- Configurable timeouts and headers
+- Comprehensive error handling and logging
+
+### ⚡ Async Support
+- High-performance async client for bulk operations
+- Concurrent text fetching capabilities
+- Proper session management and resource cleanup
+
+### 📊 Data Export Tools
+- **JSON**: Full text structure preservation
+- **CSV**: Verse-by-verse data export
+- **PDF**: Clean English text generation
+- **HTML**: Tag removal and formatting
+
+## 🛠️ Installation
 
 ```bash
-pip install sefaria-sdk
-```
-
-Or install from source:
-```bash
-git clone https://github.com/rbrtjns90/unofficial_sefaria_python_sdk.git
+# Clone the repository
+git clone https://github.com/yourusername/unofficial_sefaria_python_sdk.git
 cd unofficial_sefaria_python_sdk
+
+# Install the SDK
 pip install -e .
+
+# Install example dependencies
+pip install -r requirements.txt
 ```
 
-## Quick Start
+## 🚀 Quick Start
 
 ```python
-from sefaria_sdk import SefariaClient, TextProcessor
+from sefaria_sdk import SefariaClient
 
 # Initialize client
 client = SefariaClient()
 
-# Get text in default version (Hebrew)
-response = client.get_text("Genesis 1:1")
-print(response['text'])
+# Search for texts
+results = client.search("charity", limit=5)
+print(f"Found {results['hits']['total']} results")
 
-# Get English translation
-english = client.get_text("Genesis 1:1", version="The Holy Scriptures: A New Translation (JPS 1917)")
-print(english['text'])
+# Get text with specific version
+text = client.get_text("Genesis 1:1", lang="en")
+print(text['versions'][0]['text'])
 
-# Use text processing utilities
-hebrew = response['he']
-english = english['text']
+# Get related content
+related = client.get_related("Genesis 1:1")
+print(f"Found {len(related['links'])} related texts")
 
-# Format Hebrew text with proper RTL
-formatted_hebrew = TextProcessor.format_hebrew(hebrew)
-
-# Get parallel texts
-verse_pairs = TextProcessor.get_parallel_texts(hebrew, english)
-for he, en in verse_pairs:
-    print(f"{he} | {en}")
+# Get available languages
+languages = client.get_languages()
+print(f"Available languages: {list(languages.keys())}")
 ```
 
-## Example Applications
+## 📚 Examples
 
-The SDK comes with several example applications demonstrating real-world usage:
+All examples are **tested and working** with the current Sefaria API:
 
-1. **Basic Usage** (`examples/01_basic_usage/`)
-   - Text retrieval in different languages and versions
-   - Response handling and error management
+### Command Line Interface
+```bash
+# Search for texts
+python examples/04_cli/sefaria_cli.py search "charity" -n 5
 
-2. **Web Application** (`examples/02_web_app/`)
-   - Flask app displaying weekly Torah portions
-   - Parallel Hebrew/English text display
-   - Responsive design with RTL support
+# Get specific text
+python examples/04_cli/sefaria_cli.py get-text "Psalms 23:1"
 
-3. **Research Tools** (`examples/03_research/`)
-   - Text analysis utilities
-   - Word frequency analysis
-   - Cross-reference exploration
+# View today's calendar
+python examples/04_cli/sefaria_cli.py today
+```
 
-4. **Command Line Interface** (`examples/04_cli/`)
-   - Quick text access from terminal
-   - Search functionality
-   - Calendar information
+### Web Application
+```bash
+# Run Flask Torah portion viewer
+python examples/02_web_app/flask_torah_app.py
+# Visit http://localhost:5000
+```
 
-5. **Async Implementation** (`examples/05_async/`)
-   - Asynchronous text fetching
-   - Batch processing capabilities
-
-6. **Data Export** (`examples/06_data_export/`)
-   - Export texts to various formats
-   - PDF and structured data generation
-
-See the [examples directory](examples/) for detailed documentation and usage instructions.
-
-## API Documentation
-
-### Main Client Methods
-
-- `get_text(ref, version=None)`: Get text for a specific reference
-- `get_calendar_items(timezone="UTC")`: Get Jewish calendar information
-- `search_text(query)`: Search across Sefaria texts
-- `get_index(title)`: Get metadata about a text
-- `get_text_versions(title)`: Get available versions of a text
-
-### Response Types
-
-All responses are Python dictionaries containing:
-- `text`: The requested text content
-- `he`: Hebrew text when available
-- `versions`: Available text versions
-- `refs`: Text references
-- `type`: Content type identifier
-
-## Text Processing Utilities
-
-The SDK includes powerful text processing utilities through the `TextProcessor` class:
-
-### Verse Extraction
+### Async Text Processing
 ```python
-verses = TextProcessor.extract_verses(response)
+# Fetch multiple texts concurrently
+python examples/05_async/async_text_fetcher_fixed.py
 ```
-- Extracts individual verses from API responses
-- Handles various response formats
-- Removes empty verses and normalizes whitespace
 
-### Hebrew Text Formatting
+### Data Export
 ```python
-formatted = TextProcessor.format_hebrew(hebrew_text)
+# Export texts to multiple formats
+python examples/06_data_export/text_exporter.py
+# Generates JSON, CSV, and PDF files
 ```
-- Adds proper RTL markers
-- Handles nikud (vowel points) correctly
-- Ensures consistent text display
 
-### Parallel Text Alignment
-```python
-pairs = TextProcessor.get_parallel_texts(hebrew, english)
+## 🔧 API Methods
+
+### Core Methods
+- `get_text(tref, **kwargs)` - Retrieve text with full v3 API support
+- `search(query, **kwargs)` - Advanced search with highlighting
+- `get_related(tref)` - Find related texts and commentaries
+- `get_languages()` - Available translation languages
+- `get_calendar()` - Jewish calendar information
+
+### Advanced Features
+- Automatic retry with exponential backoff
+- Session-based connection pooling
+- Configurable timeouts and headers
+- Comprehensive error handling
+
+## 📁 Project Structure
+
 ```
-- Aligns Hebrew and English texts verse by verse
-- Handles mismatched verse counts
-- Returns paired verses for parallel display
-
-### Text Cleaning
-```python
-clean = TextProcessor.clean_text(text)
+unofficial_sefaria_python_sdk/
+├── sefaria_sdk/
+│   ├── client.py          # Main SDK client
+│   ├── text_processing.py # Text utilities
+│   └── __init__.py
+├── examples/
+│   ├── 01_basic_usage/    # Basic API usage
+│   ├── 02_web_app/        # Flask web application
+│   ├── 03_research/       # Text analysis tools
+│   ├── 04_cli/            # Command line interface
+│   ├── 05_async/          # Async text fetching
+│   ├── 06_data_export/    # Multi-format export
+│   └── 06_improved_api/   # Modern API showcase
+├── requirements.txt
+├── setup.py
+└── README.md
 ```
-- Normalizes whitespace and punctuation
-- Removes extra spaces
-- Ensures consistent text formatting
 
-## Contributing
+## 🔄 Recent Updates
 
-Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details on:
-- Code style and standards
-- Testing requirements
-- Pull request process
-- Development setup
+### API Compatibility (August 2024)
+- ✅ Updated search to use POST `/search-wrapper`
+- ✅ Fixed text retrieval for current API response structure
+- ✅ Corrected language parameter handling
+- ✅ Enhanced error handling and retries
 
-## License
+### Example Fixes
+- ✅ **CLI Search**: Now displays actual results instead of "N/A"
+- ✅ **Async Fetcher**: Retrieves real English text content
+- ✅ **Text Exporter**: Proper API response parsing for all formats
+- ✅ **Modern Demo**: Working search and related content features
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Development Setup
+```bash
+# Install development dependencies
+pip install -r requirements.txt
+
+# Run tests
+python -m pytest
+
+# Format code
+black sefaria_sdk/ examples/
+```
+
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Acknowledgments
+## ⚠️ Disclaimer
 
-- [Sefaria](https://www.sefaria.org) for providing the API and text content
-- The Jewish community for preserving these texts
-- All contributors to this project
+This is an unofficial SDK and is not affiliated with or endorsed by Sefaria. Please respect Sefaria's API usage guidelines and terms of service.
 
-## Support
+## 🔗 Links
 
-For support, please:
-1. Check the [examples](examples/) directory
-2. Read the [documentation](docs/)
-3. Open an issue for bugs or feature requests
+- [Sefaria Website](https://www.sefaria.org)
+- [Sefaria API Documentation](https://www.sefaria.org/developers)
+- [Report Issues](https://github.com/yourusername/unofficial_sefaria_python_sdk/issues)
 
-## Disclaimer
+---
 
-This is an unofficial SDK and is not affiliated with or endorsed by Sefaria.
+**Made with ❤️ for the Jewish learning community**
