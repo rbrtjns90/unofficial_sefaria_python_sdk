@@ -1,6 +1,7 @@
-import requests
-from typing import Optional, List, Dict, Union, Any
+from typing import Any, Dict, List, Optional, Union
 from urllib.parse import quote
+
+import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
@@ -103,7 +104,7 @@ class SefariaClient:
         if categories:
             params["categories"] = categories
 
-        response = requests.get(endpoint, params=params)
+        response = requests.get(endpoint, params=params, timeout=15)
         response.raise_for_status()
         return response.json()
 
@@ -298,7 +299,7 @@ class SefariaClient:
         if version:
             params["version"] = version
 
-        response = requests.get(endpoint, params=params)
+        response = requests.get(endpoint, params=params, timeout=15)
         response.raise_for_status()
         return response.json()
 

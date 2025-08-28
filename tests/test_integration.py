@@ -3,9 +3,10 @@ Integration tests for the Sefaria SDK.
 These tests use mock responses to simulate real API interactions.
 """
 
-import pytest
-from unittest.mock import Mock, patch
 import json
+from unittest.mock import Mock, patch
+
+import pytest
 
 from sefaria_sdk.client import SefariaClient
 from sefaria_sdk.text_processing import TextProcessor

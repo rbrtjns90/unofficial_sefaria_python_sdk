@@ -3,6 +3,7 @@ Tests for the TextProcessor class.
 """
 
 import pytest
+
 from sefaria_sdk.text_processing import TextProcessor
 
 

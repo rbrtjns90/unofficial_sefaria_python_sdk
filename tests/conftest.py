@@ -2,8 +2,10 @@
 Pytest configuration and shared fixtures.
 """
 
-import pytest
 from unittest.mock import Mock
+
+import pytest
+
 from sefaria_sdk.client import SefariaClient
 
 

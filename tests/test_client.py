@@ -2,11 +2,12 @@
 Tests for the SefariaClient class.
 """
 
+import json
+from unittest.mock import MagicMock, Mock, patch
+
 import pytest
 import requests
-from unittest.mock import Mock, patch, MagicMock
 from requests.exceptions import HTTPError, RequestException
-import json
 
 from sefaria_sdk.client import SefariaClient
 

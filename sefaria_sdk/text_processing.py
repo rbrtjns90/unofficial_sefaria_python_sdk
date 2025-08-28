@@ -5,8 +5,8 @@ This module provides utilities for handling Hebrew and English texts from Sefari
 including verse extraction, Hebrew text formatting, and parallel text alignment.
 """
 
-from typing import Dict, List, Tuple, Optional, Union
 import re
+from typing import Dict, List, Optional, Tuple, Union
 
 
 class TextProcessor:

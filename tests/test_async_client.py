@@ -2,11 +2,12 @@
 Tests for async functionality.
 """
 
-import pytest
 import asyncio
+from unittest.mock import AsyncMock, Mock, patch
+
 import aiohttp
-from unittest.mock import AsyncMock, patch, Mock
-from aiohttp import ClientSession, ClientResponse
+import pytest
+from aiohttp import ClientResponse, ClientSession
 
 
 # Mock async client for testing
