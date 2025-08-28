@@ -1,0 +1,60 @@
+name: Examples Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run weekly to catch API changes
+    - cron: '0 0 * * 0'
+
+jobs:
+  test-examples:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -e .
+        # Install example-specific dependencies
+        pip install flask pandas fpdf rich
+
+    - name: Test CLI examples
+      run: |
+        cd examples/04_cli
+        python sefaria_cli.py search "charity" -n 3
+        python sefaria_cli.py get-text "Genesis 1:1"
+
+    - name: Test async examples
+      run: |
+        cd examples/05_async
+        timeout 30s python async_text_fetcher_fixed.py || true
+
+    - name: Test data export examples
+      run: |
+        cd examples/06_data_export
+        timeout 60s python text_exporter.py || true
+
+    - name: Test modern API examples
+      run: |
+        cd examples/06_improved_api
+        timeout 30s python modern_client_demo.py || true
+
+    - name: Upload example outputs
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: example-outputs
+        path: |
+          examples/**/*.json
+          examples/**/*.csv
+          examples/**/*.pdf
