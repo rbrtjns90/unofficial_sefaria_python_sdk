@@ -34,7 +34,7 @@ A comprehensive, modernized Python SDK for interacting with the [Sefaria API](ht
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/unofficial_sefaria_python_sdk.git
+git clone https://github.com/rbrtjns90/unofficial_sefaria_python_sdk.git
 cd unofficial_sefaria_python_sdk
 
 # Install the SDK
